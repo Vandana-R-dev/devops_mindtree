@@ -1,0 +1,366 @@
+Playbook is usually list of plays.
+In each play we have
+  name:playbook name
+  host:place where u want to run(webserver)
+  remote_user:this can be root or ubutnu
+  tasks:
+   modules===place where actual action takes place
+
+most commonly used modules are:
+**ping-**
+ping module is used for checking up on the remote host, specifically for connectivity to remote host and for checking python on the remote host. It can also be used to check user login and privilages
+
+---
+- name: ping module 
+  hosts: all
+  become: false
+  tasks:
+    - name: test connection
+      ping:
+
+**setup module**
+
+setup module helps us in gathering data about the target nodes like hostname, ip, os etc. This module is automatically called by playbook to gather useful variable about remote host. . All the information is presented in a friendly t JSON format, with all values being preceded with “ansible_”.
+
+ansible host-1 -m setup -u ec2-user
+The output of the above adhoc command will be in the format
+
+
+You can also filter the result by using the filter parameter.
+
+ansible all -m setup -u ec2-user -a 'filter=ansible_os_family'
+
+**yum module**
+
+yum module is used to install different packages/software on Redhat based linux flavours.
+
+---
+- name: Update Package on linux system
+  hosts: all
+  become: yes
+  tasks:
+  - name: Uninstall Apache
+    yum:
+      name: nginx
+      state: absent
+  - name: Install a list of packages with a list variable
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - httpd
+      - httpd-tools
+**apt module**
+
+apt package module is used for managing software on debian based linux os.
+
+---
+- name: Update Package on debian system
+  hosts: all
+  become: yes
+  tasks:
+  - name: Run the equivalent of "apt-get update" as a separate step
+    apt:
+      update_cache: yes
+  - name: Install latest version of "openjdk-6-jdk" 
+    apt:
+      name: openjdk-6-jdk
+      state: latest
+      install_recommends: no
+**package module**
+
+This modules manages packages on a target without specifying a package manager module (lyum, apt, …). It is convenient to use in an heterogeneous environment of machines without having to create a specific task for each package manager. This module acts as a proxy to the underlying package manager module. While all arguments will be passed to the underlying module,
+
+---
+- name: Update Packages on target system
+  hosts: all
+  become: yes
+  tasks:
+  - name: Install ntpdate
+    ansible.builtin.package:
+      name: ntpdate
+      state: present
+   
+  - name: Install the latest version of Apache and MariaDB
+    ansible.builtin.package:
+      name:
+        - httpd
+        - mariadb-server
+      state: latest
+
+**pip module**
+
+Pip module is used for managing python packages on the target system.
+
+---
+- name: Update python packages
+  hosts: all
+  become: yes
+  tasks:
+  - name: Install multi python packages with version specifiers
+    pip:
+      name:
+        - django>1.11.0,<1.12.0
+        - bottle>0.10,<0.20,!=0.11
+  - name: Install specified python requirements
+    pip:
+      requirements: /my_app/requirements.txt
+**npm module**
+
+Npm module is used for managing of node.js packages. This module is not part of ansible-core modules. To use it in a playbook, specify: community.general.npm.
+
+---
+- name: npm module
+  hosts: all
+  tasks:
+  - name: Install "coffee-script" node.js package.
+    community.general.npm:
+      name: coffee-script
+      path: /app/location
+  - name: Install packages based on package.json.
+    community.general.npm:
+      path: /app/location
+
+**raw module**
+
+Raw module is used to executes a low-down and dirty SSH command, It is s useful and should only be done in a few cases. A common case is installing python on a system which doesnot have python. Another is speaking to any devices such as routers that do not have Python installed on it.
+
+In any other case, using shell or command module is much more appropriate, Arguments given to raw are run directly through the configured remote shell.
+
+---
+- name: raw module usage
+  hosts: all
+  become: yes
+  tasks:
+  - name: Bootstrap a host without python2 installed
+    raw: dnf install -y python2 python2-dnf libselinux-python
+  
+  - name: Run a command that uses non-posix shell-isms (in this example /bin/sh doesn't handle redirection and wildcards together but bash does)
+    raw: cat < /tmp/*txt
+    args:
+      executable: /bin/bash
+**command module**
+
+Command module is used to execute commands on a remote node. It is used mostly to run simple Linux commands . The command(s) will not be processed through the shell, so variables like $HOSTNAME and operations like “*”, “<”, “>”, “|”, “;” and “&” will not work. For Windows targets, use the win_command module instead. For windows based target win_command can be used in place of command module.
+
+---
+- name: command module
+  hosts: all
+  tasks:
+  - name: Run command if /path/to/database does not exist (without 'args')
+    command: /usr/bin/make_database.sh db_user db_name creates=/path/to/database
+  - name: Run command if /path/to/database does not exist (with 'args' keyword)
+    ansible.builtin.command: /usr/bin/make_database.sh db_user db_name
+    args:
+      creates: /path/to/database
+**shell module**
+
+Shell module is designed to execute shell commands against the target unix based hosts. Unlike the Ansible command module, Ansible Shell would accept highly complexed commands with pipes, redirection etc, you can also execute shell scripts using this module. This module is designed to work only with Linux based Machines and not Windows, For windows you should use win_powershell module
+
+---
+- name: shell module
+  hosts: all
+  tasks:
+  - name: This command will change the working directory to somedir/ and will only run when somedir/somelog.txt doesn't exist
+    shell: somescript.sh >> somelog.txt
+    args:
+      chdir: somedir/
+      creates: somelog.txt
+  
+  - name: This command will change the working directory to somedir/
+    shell:
+      cmd: ls -l | grep log
+      chdir: somedir/
+  
+  - name: Run a command that uses non-posix shell-isms (in this example /bin/sh doesn't handle redirection and wildcards together but bash does)
+    shell: cat < /tmp/*txt
+    args:
+      executable: /bin/bash
+**script module**
+
+Script module can be used to run a local script on a remote node. When we invoke the shell module and passes a local shell script to it, what it does at the backend is that first it transfers the script to the remote node and than executes it. Two important things to keep in mind about this module is that it does not require python on the remote node and the script is executed through shell. script module is also supported for windows based nodes.
+
+---
+- name: script module
+  hosts: all
+  tasks:
+  -  name: Run a script with arguments (free form)
+     ansible.builtin.script: /some/local/script.sh --some-argument 1234
+   
+  -  name: Run a script with arguments (using 'cmd' parameter)
+     ansible.builtin.script:
+       cmd: /some/local/script.sh --some-argument 1234
+
+**Service Module**
+The service module controls services on remote hosts and can leverage different init systems depending on their availability in a system. This module provides a nice abstraction layer for underlying service manager modules. Here’s an example of restarting the docker service:
+
+- name: Restart docker service
+   ansible.builtin.service:
+     name: docker
+     state: restarted
+
+**File Module**
+The file module handles operations to files, symlinks, and directories. Here’s an example of using this module to create a directory with specific permissions:
+
+- name: Create the directory "/etc/test" if it doesnt exist and set permissions
+  ansible.builtin.file:
+    path: /etc/test
+    state: directory
+    mode: '0750'
+**Copy Module**
+The Ansible copy module copies files to the remote machine and handles file transfers or moves within a remote system. Here’s an example of copying a file to the remote machine with permissions set:
+
+- name: Copy file with owner and permissions
+  ansible.builtin.copy:
+    src: /example_directory/test
+    dest: /target_directory/test
+    owner: joe
+    group: admins
+    mode: '0755'
+
+**Template Module**
+The template module assists us to template files out to target hosts by leveraging the Jinja2 templating language. Here’s an example of using a template file and some set Ansible variables to generate an Nginx configuration file:
+
+- name: Copy and template the Nginx configuration file to the host
+  ansible.builtin.template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+
+**Cron Module**
+The cron module manages crontab entries and environment variables entries on remote hosts.
+
+- name: Run daily DB backup script at 00:00
+  ansible.builtin.cron:
+    name: "Run daily DB backup script at 00:00"
+    minute: "0"
+    hour: "0"
+    job: "/usr/local/bin/db_backup_script.sh > /var/log/db_backup_script.sh.log 2>&1"
+
+**DEMO PLAYBOOK**
+ become: true #it runs on root user if i wont give it runs whichever user is configured for ansible in this case we used ubuntu
+ hosts:all means it runs on all inventory files
+---
+- hosts: all
+  become: true 
+  tasks:
+    - name: Install apache httpd
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+        update_cache: yes
+    - name: Copy file with owner and permissions
+      ansible.builtin.copy:
+        src: index.html
+        dest: /var/www/html
+        owner: root
+        group: root
+        mode: '0644'
+
+**Ansible roles:**
+If we have 20 tasks that we should write in playbook it would be tough for readabality so we have roles for organinzing and reusing can be easy to use it.
+creating each folder for each role everytime it would be tough so we have one command that creates all folders at one shot
+synatax: ansible-galaxy role init role-name
+ansible-galaxy role init test
+(it will create readme.md, files, templates, vars, tasks, tests, meta, defaults, handlers)
+After creating roles we can upload to ansible galaxy, github and we can share within organization.
+
+An Ansible role is a reusable, self-contained unit of automation that is used to organize and manage tasks, variables, files, templates, and handlers in a structured way.
+
+Roles help to encapsulate and modularize the logic and configuration needed to manage a particular system or application component.
+
+This modular approach promotes reusability, maintainability, and consistency across different playbooks and environments.
+
+Key Components of an Ansible Role
+Tasks
+The main list of actions that the role performs.
+
+Handlers
+Tasks that are triggered by changes in other tasks, typically used for actions like restarting services.
+
+Files
+Static files that need to be transferred to managed hosts.
+
+Templates(to store dynamic values)
+Jinja2 templates that can be rendered and transferred to managed hosts.
+
+Vars
+Variables that are used within the role.
+
+Defaults(if we wont give anything it will take defaults/main.yml variables)
+Default variables for the role, which can be overridden.
+
+Meta(brief explaiantion)
+Metadata about the role, including dependencies on other roles.
+
+Library
+Custom modules or plugins used within the role.
+
+Module_defaults
+Default module parameters for the role.
+
+Lookup_plugins
+Custom lookup plugins for the role.
+
+Directory Structure of an Ansible Role
+An Ansible role follows a specific directory structure:
+
+<role_name>/
+  ├── defaults/
+  │   └── main.yml
+  ├── files/
+  ├── handlers/
+  │   └── main.yml
+  ├── meta/
+  │   └── main.yml
+  ├── tasks/
+  │   └── main.yml
+  ├── templates/
+  ├── vars/
+      └── main.yml
+Why Use Ansible Roles?
+Modularity
+Roles allow you to break down complex playbooks into smaller, reusable components. Each role handles a specific part of the configuration or setup.
+
+Reusability
+Once created, roles can be reused across different playbooks and projects. This saves time and effort in writing redundant code.
+
+Maintainability
+By organizing related tasks into roles, it becomes easier to manage and maintain the code. Changes can be made in one place and applied consistently wherever the role is used.
+
+Readability
+Roles make playbooks cleaner and easier to read by abstracting away the details into logically named roles.
+
+Collaboration
+Roles facilitate collaboration among team members by allowing them to work on different parts of the infrastructure independently.
+
+Consistency
+Using roles ensures that the same setup and configuration procedures are applied uniformly across multiple environments, reducing the risk of configuration drift.
+
+# ctrl+v for select then d for delete to remove extra space
+in playbook we need to mention roles that we are using such as role-name
+
+ Include Roles in Playbooks: Finally, include the role in your playbook.
+
+# playbook.yml
+---
+- hosts: webservers
+  roles:
+    - role_name(name of role_name that you have used while creating ansible-galaxy)
+
+we can run playbook as normal after including roles also
+ansible-playbook -i inventory.ini first-playbook.yaml
+
+we can login to ansible galaxy with github account
+if you searcg role-namspaces you will get ur github id
+
+to check hidden roles ls ~./ansible/roles
+
+**In Inventory files we will have ip's of managed nodes**
+
+**Execution plan:**
+For example control nodes have multiple tasks so it ll take each task run on all manage node once it completes first task in all amange nodes then it moves to second task.
+If first task fails it wont continue with rest of the tasks it stops there.
+with the help of error handling we can ignore manage node1 even though task1 fails but task2 starts executing from manage node 1 not manage node1 it ignores it.
+
+**Error handling:**(check in chatgpt link shared in whatsapp)
+ 

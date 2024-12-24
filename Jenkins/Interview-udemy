@@ -1,0 +1,11 @@
+Question: Your EC2 instance is running out of disk space . What actions will you take to mitigate the issue ?
+Question: Explain difference way in which prometheus can get metrics ?
+Question: What is Kubernetes kOps ?
+Question: What is instance fleet in AWS ?
+Question: How do you pass “message” when commit your git code ?
+Question: Are you supporting any application ? If yes what is the application server you are using ?
+Question: How to check logs from my docker container and how to filter only last 200 lines from container logs ?
+Question: What will happen to container logs if you restart the container ? Will it be lost ?
+Question: What is vertical scaling and horizontal scaling. Explain with use case you have seen ?
+Question: Explain replication controller in kubernetes
+what is nort-sout and east-west traffic in terms of kubernetes

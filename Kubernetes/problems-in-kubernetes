@@ -1,0 +1,106 @@
+1. CrashLoopBackOff Error
+Cause: The container is repeatedly failing and restarting.
+Fix:
+Inspect logs:
+kubectl logs <pod-name>
+Check readiness/liveness probes in the pod configuration.
+Validate the application code or configuration (e.g., missing environment variables).
+2. ImagePullBackOff
+Cause: Kubernetes cannot pull the specified container image.
+Fix:
+Check the image name and tag:
+spec:
+  containers:
+  - image: <repository>/<image>:<tag>
+Ensure the image exists in the container registry.
+For private images, create a Secret for authentication:
+kubectl create secret docker-registry <secret-name> \
+  --docker-server=<registry> --docker-username=<user> \
+  --docker-password=<password> --docker-email=<email>
+3. ErrImageNeverPull
+Cause: The image pull policy is set to Never, and the image is not locally available.
+Fix:
+Update imagePullPolicy:
+imagePullPolicy: IfNotPresent
+Or ensure the image exists locally using:
+docker images
+4. Node Not Ready
+Cause: The Kubernetes node is in a "NotReady" state.
+Fix:
+Check node status:
+kubectl describe node <node-name>
+Restart kubelet:
+systemctl restart kubelet
+Ensure sufficient resources (CPU, memory).
+5. Pending Pods
+Cause: No available nodes match the pod's scheduling requirements.
+Fix:
+Check pod events:
+kubectl describe pod <pod-name>
+Remove unnecessary resource requests/limits.
+Verify taints/tolerations and affinity rules.
+6. OOMKilled Error
+Cause: The container exceeded its memory limit.
+Fix:
+Increase memory limits:
+resources:
+  limits:
+    memory: "512Mi"
+Optimize the application to use less memory.
+7. Pod Stuck in Terminating
+Cause: Kubernetes cannot delete the pod.
+Fix:
+Force delete the pod:
+kubectl delete pod <pod-name> --grace-period=0 --force
+Check for issues with the volume detach process.
+8. Service Not Accessible
+Cause: Service is misconfigured or backend pods are not ready.
+Fix:
+Verify the service type and configuration:
+kubectl describe service <service-name>
+Check endpoints:
+kubectl get endpoints <service-name>
+9. Error: Forbidden - User Cannot Access Resource
+Cause: RBAC policy does not permit the action.
+Fix:
+Check and modify role bindings:
+kubectl edit rolebinding <role-binding-name>
+10. PVC Pending
+Cause: No matching storage class or insufficient storage.
+Fix:
+Check storage classes:
+kubectl get storageclass
+Update PVC to use a valid storage class.
+11. Unauthorized Error
+Cause: Incorrect Kubernetes credentials.
+Fix:
+Refresh kubeconfig:
+aws eks update-kubeconfig --name <cluster-name>
+12. ImagePullSecrets Missing
+Cause: Pulling private images without authentication secrets.
+Fix:
+Attach a valid imagePullSecrets to the pod spec:
+imagePullSecrets:
+- name: <secret-name>
+13. Pod Stuck in ContainerCreating
+Cause: Issues with the container runtime or network plugin.
+Fix:
+Check events:
+kubectl describe pod <pod-name>
+Restart container runtime (e.g., Docker or CRI-O).
+14. DNS Resolution Failure
+Cause: Kubernetes DNS not resolving service names.
+Fix:
+Check CoreDNS logs:
+kubectl logs -n kube-system <coredns-pod>
+Update the resolv.conf file or CoreDNS ConfigMap.
+15. Pod Disruption Budget (PDB) Violations
+Cause: Insufficient pods available to meet PDB.
+Fix:
+Temporarily remove or adjust the PDB:
+kubectl edit pdb <pdb-name>
+16. kube-apiserver is Down
+Cause: The control plane node is not functioning.
+Fix:
+Restart the kube-apiserver:
+systemctl restart kube-apiserver

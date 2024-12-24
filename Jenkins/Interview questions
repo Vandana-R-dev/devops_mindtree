@@ -1,0 +1,66 @@
+Tietovry:9-12-2024
+Can you explain what you have done for 2 years in LTI MIndtree?
+how you setup pipelines and how you are doing testing for your code and what are the monitoring tools that you are using to observe your code
+daily challenges that you faced during pipelines
+what are the steps that we have to create pipeline
+which stage you faced more problems what are your expertise in it
+how do you use loadbalancer how to keep track of certificate expiry
+how would you do the observability
+whare is your logs that devops build daily activities are stored and how are you getting notifications
+you got some console application,schedule like jobs 
+without downtime how you run application in different environment 
+for what purpose you have used load balancers
+what are the uses of load balancers
+how can we use load balancers for different regions how this traffic isolation between these
+for example request coming from north america and traffice to south america how you you navigate traffice to therir specific regions
+
+Citibank-Internal:9-12-2024
+what was the tasks you are doing in your project
+how you are creating the pipelines any automation for it or doing manually
+devops life cycle
+where was jenkins deployed in backend
+what if any stage fails in jenkins
+groups in devops
+what are tools you are using for CD
+continous testing how you are using it
+what is IAC
+how do you manage persistent storage in openshift
+steps to create a  jenkins pipeline/ how do you configure jenkins
+how do you run jenkins if its deployed in kubernetes or local\
+if that jenkins is deplyed in local how multiple users can access it
+what are the reasons for jenkins pipeline failures
+where is your cpu memory and all stored how do you check it(who will check it u or othe admin team needs to check it)
+do you know groovy script
+how can you handle shared library in jenkins
+what is temptons
+what are wehbooks
+what is artifactory
+security in artifacts
+how do you manage cpu access in artifactory
+what are main features of sonarqube
+quality gate
+how can we handle sonarqubes
+main components of docker
+main components of kubernetes
+how do you optimize the docker
+role of configmaps
+rolling updates in kubernetes
+what is helm?what is use of helm in kubernetes
+what is alert manager in prometheus
+what more did you do apart from monitoring?can you tell me or list down anything that actually heped you?monitoring is after any work butbefore you have written any script for monitor
+have you written any script that can resolve issues in docker as automation
+what is ec2
+rds
+s3
+error handling
+what is lambda
+As the session hostes in AWS and we shall have 2000 services at a time there is an intermittent downtime and its coming back to normal after sometimw how do you fix it
+
+tala elxsi
+what is network load balancer and application load balancer
+Can you just brief about migration
+what are microservices
+autoscaling
+how can i configure autoscaling setting in AWS?how can i configure it when we use the autoscaling?how can i configure in AWS
+how jenkins choose an agent
+ how can you do migration
